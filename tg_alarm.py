@@ -13,6 +13,7 @@ DH_GENERATOR = 2
 
 CALL_RING_SECS = 12
 RETRY_DELAY = 25
+MAX_CALLS = 50
 
 API_ID = int(os.environ.get('TG_API_ID', '0') or '0')
 API_HASH = os.environ.get('TG_API_HASH', '') or ''
@@ -116,9 +117,14 @@ async def main():
     print(f"✓ Last message id: {last_msg_id}")
     print(f"▶ Starting alarm loop (calls every {CALL_RING_SECS + RETRY_DELAY}s)...\n")
 
+    calls_made = 0
     while is_running:
         if await check_new_msg():
             print(f"\n✅ New message from {name} detected! Stopping.")
+            break
+
+        if calls_made >= MAX_CALLS:
+            print(f"\n⏹ Max calls reached ({MAX_CALLS}), stopping.")
             break
 
         print(f"⏰ Calling {name}...")
@@ -126,6 +132,7 @@ async def main():
             await make_call()
         except Exception as e:
             print(f"  ✗ Error: {e}")
+        calls_made += 1
 
         if not is_running:
             break
