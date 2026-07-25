@@ -127,7 +127,7 @@ async def main():
             print(f"\n⏹ Max calls reached ({MAX_CALLS}), stopping.")
             break
 
-        print(f"⏰ Calling {name}...")
+        print(f"⏰ Calling {name}... ({calls_made}/{MAX_CALLS})")
         try:
             await make_call()
         except Exception as e:
