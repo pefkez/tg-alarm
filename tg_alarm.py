@@ -40,12 +40,12 @@ async def get_last_msg_id():
 
 async def check_new_msg():
     global last_msg_id
-    current = await get_last_msg_id()
-    if current > last_msg_id:
-        msgs = await client.get_messages(target_user, limit=1)
-        for m in msgs:
-            if m.id > last_msg_id and not isinstance(m, MessageEmpty) and m.out is False:
-                return True
+    msgs = await client.get_messages(target_user, limit=1)
+    if not msgs:
+        return False
+    m = msgs[0]
+    if m.id > last_msg_id and not isinstance(m, MessageEmpty) and not m.out:
+        return True
     return False
 
 async def make_call():
