@@ -15,18 +15,16 @@ CALL_RING_SECS = 12
 RETRY_DELAY = 25
 MAX_CALLS = 50
 
-API_ID = int(os.environ.get('TG_API_ID', '0') or '0')
-API_HASH = os.environ.get('TG_API_HASH', '') or ''
-PHONE = os.environ.get('TG_PHONE', '') or ''
-TARGET = os.environ.get('TG_TARGET', '') or ''
+# ═══════════════════════════════════════════════════════════
+# ТВОИ ДАННЫЕ — впиши сюда ↓
+# ═══════════════════════════════════════════════════════════
 
-if not all([API_ID, API_HASH, PHONE, TARGET]):
-    print("Usage: set environment variables:")
-    print("  TG_API_ID     — your API ID from my.telegram.org")
-    print("  TG_API_HASH   — your API hash from my.telegram.org")
-    print("  TG_PHONE      — your phone number (e.g. +79123456789)")
-    print("  TG_TARGET     — target username (e.g. @girlfriend or phone)")
-    sys.exit(1)
+API_ID = 123456789   # → замени на свой API ID (из my.telegram.org → API Development tools)
+API_HASH = 'abc123def456...'  # → замени на свой API Hash (оттуда же)
+PHONE = '+79123456789'    # → твой номер телефона в Telegram
+TARGET = '@imya_devushki'   # → её юзернейм (с @) или номер телефона
+
+# ═══════════════════════════════════════════════════════════
 
 client = TelegramClient('tg_alarm_session', API_ID, API_HASH)
 target_user = None
