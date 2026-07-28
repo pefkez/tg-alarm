@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .env
 *.session
+.claude/
+tg_alarm_macro_calibrate.json
