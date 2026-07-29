@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# tg_alarm_macro.py — Telegram Alarm БЕЗ Telegram API
-# Работает через макрос: скриншоты чата -> детект новых сообщений -> звонок через Telegram Desktop
 
 import pyautogui
 import win32gui
@@ -16,13 +14,11 @@ import shutil
 
 pyautogui.FAILSAFE = True
 
-# ===== НАСТРОЙКИ — меняй здесь =====
-TARGET_NAME = "Имя пользователя"  # как искать чат (имя, юзернейм — что вбиваешь в Ctrl+K)
-CHECK_INTERVAL = 10               # пауза между звонками (сек)
-RING_SECONDS = 8                  # сколько секунд звенит звонок перед сбросом
-CHANGE_THRESHOLD = 15.0           # чувствительность детекта (меньше = чувствительнее, 5-30 норм)
-CALIBRATE_FILE = "tg_alarm_macro_calibrate.json"  # файл с позициями кнопок (создаётся при --calibrate)
-# ====================================
+TARGET_NAME = "Имя пользователя"
+CHECK_INTERVAL = 10
+RING_SECONDS = 8
+CHANGE_THRESHOLD = 15.0
+CALIBRATE_FILE = "tg_alarm_macro_calibrate.json"
 
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}")

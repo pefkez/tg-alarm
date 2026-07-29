@@ -15,16 +15,10 @@ CALL_RING_SECS = 12
 RETRY_DELAY = 25
 MAX_CALLS = 50
 
-# ═══════════════════════════════════════════════════════════
-# ТВОИ ДАННЫЕ — впиши сюда ↓
-# ═══════════════════════════════════════════════════════════
-
-API_ID = 123456789   # → замени на свой API ID (из my.telegram.org → API Development tools)
-API_HASH = 'abc123def456...'  # → замени на свой API Hash (оттуда же)
-PHONE = '+79123456789'    # → твой номер телефона в Telegram
-TARGET = '@imya_devushki'   # → её юзернейм (с @) или номер телефона
-
-# ═══════════════════════════════════════════════════════════
+API_ID = 123456789   # my.telegram.org → API Development tools
+API_HASH = 'abc123def456...'
+PHONE = '+79123456789'
+TARGET = '@imya_devushki'
 
 client = TelegramClient('tg_alarm_session', API_ID, API_HASH)
 target_user = None
