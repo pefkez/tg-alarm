@@ -1,2 +1,4 @@
 telethon>=1.36
 cryptg>=0.4
+python-telegram-bot>=21
+python-dotenv>=1.0
