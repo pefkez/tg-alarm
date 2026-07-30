@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tg-alarm Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e8e8f0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 16px; background: linear-gradient(135deg, #7c6ff0, #4cd9a8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .card { background: rgba(26,26,40,0.85); backdrop-filter: blur(12px); border: 1px solid rgba(46,46,74,0.6); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .card h2 { font-size: 1rem; margin-bottom: 8px; color: #9090b0; }
+        .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+        input, select { background: rgba(36,36,58,0.9); border: 1px solid rgba(46,46,74,0.6); border-radius: 6px; padding: 8px 12px; color: #e8e8f0; font-size: 0.85rem; }
+        input:focus, select:focus { border-color: #7c6ff0; outline: none; }
+        button { background: #7c6ff0; border: none; border-radius: 6px; padding: 8px 16px; color: white; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+        button:hover { background: #9d8fff; transform: translateY(-1px); }
+        button.danger { background: #ff6b6b; }
+        button.danger:hover { background: #ff8a8a; }
+        button.green { background: #4cd9a8; }
+        button.green:hover { background: #6ee3b8; }
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 0.75rem; margin-right: 4px; }
+        .badge.on { background: rgba(76,217,168,0.2); color: #4cd9a8; border: 1px solid #4cd9a8; }
+        .badge.off { background: rgba(255,107,107,0.2); color: #ff6b6b; border: 1px solid #ff6b6b; }
+        .schedule-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(36,36,58,0.5); border-radius: 6px; margin-bottom: 4px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-dot.running { background: #4cd9a8; }
+        .status-dot.stopped { background: #ff6b6b; }
+        @media (max-width: 600px) { .row { flex-direction: column; align-items: stretch; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>tg-alarm Dashboard</h1>
+
+        <div class="card">
+            <h2>Состояние</h2>
+            <div id="statusDisplay" class="row">Загрузка...</div>
+        </div>
+
+        <div class="card">
+            <h2>Управление</h2>
+            <div class="row">
+                <input id="targetInput" placeholder="@username" style="flex:1">
+                <button onclick="setTarget()">Set Target</button>
+            </div>
+            <div class="row">
+                <select id="modeSelect"><option value="api">API (Telegram)</option><option value="macro">Macro</option><option value="whatsapp">WhatsApp</option><option value="signal">Signal</option></select>
+                <button onclick="setMode()">Set Mode</button>
+                <button class="green" onclick="startAlarm()">▶ Go</button>
+                <button class="danger" onclick="stopAlarm()">⏹ Stop</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Расписание</h2>
+            <div class="row">
+                <input id="schedTime" type="time" value="07:00">
+                <input id="schedLabel" placeholder="Label" value="Morning alarm">
+                <button onclick="addSchedule()">+ Add</button>
+            </div>
+            <div id="scheduleList"></div>
+        </div>
+
+        <div class="card">
+            <h2>История логов</h2>
+            <pre id="logArea" style="font-size:0.75rem;color:#606080;max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.3);padding:8px;border-radius:6px;"></pre>
+        </div>
+    </div>
+
+    <script>
+        function log(msg) {
+            const area = document.getElementById('logArea');
+            area.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+            area.scrollTop = area.scrollHeight;
+        }
+
+        async function api(path, method='GET', body=null) {
+            try {
+                const opts = { method, headers: {} };
+                if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+                const r = await fetch(path, opts);
+                return await r.json();
+            } catch(e) { log('Error: ' + e); return null; }
+        }
+
+        async function refreshState() {
+            const data = await api('/api/state');
+            if (!data) return;
+            const sd = document.getElementById('statusDisplay');
+            const dot = data.running ? '🟢 Running' : '🔴 Stopped';
+            sd.innerHTML = `<div><span class="status-dot ${data.running ? 'running' : 'stopped'}"></span> <strong>${dot}</strong></div>
+                <div>Target: @${data.target || '?'}</div>
+                <div>Mode: ${data.mode}</div>
+                <div>Schedules: ${(data.schedules||[]).length}</div>`;
+
+            const sl = document.getElementById('scheduleList');
+            if (data.schedules && data.schedules.length) {
+                sl.innerHTML = data.schedules.map(s => `<div class="schedule-item">
+                    <span><strong>${s.label||'Alarm'}</strong> at ${s.time} | ${s.target||'?'}</span>
+                    <button class="danger" onclick="deleteSchedule('${s.id}')">×</button>
+                </div>`).join('');
+            } else { sl.innerHTML = '<div style="color:#606080">No schedules</div>'; }
+        }
+
+        async function setTarget() {
+            const val = document.getElementById('targetInput').value.trim();
+            if (!val) return;
+            await api('/api/target', 'POST', { target: val });
+            log('Target set: ' + val);
+            refreshState();
+        }
+
+        async function setMode() {
+            const mode = document.getElementById('modeSelect').value;
+            await api('/api/mode', 'POST', { mode });
+            log('Mode set: ' + mode);
+            refreshState();
+        }
+
+        async function startAlarm() {
+            const r = await api('/api/go', 'POST');
+            if (r && r.ok) log('Alarm started');
+            else log('Error: ' + (r||{}).error);
+            refreshState();
+        }
+
+        async function stopAlarm() {
+            await api('/api/stop', 'POST');
+            log('Alarm stopped');
+            refreshState();
+        }
+
+        async function addSchedule() {
+            const time = document.getElementById('schedTime').value;
+            const label = document.getElementById('schedLabel').value;
+            const target = document.getElementById('targetInput').value.trim();
+            await api('/api/schedule', 'POST', { time, label, target, days: [0,1,2,3,4,5,6] });
+            log(`Schedule added: ${label} at ${time}`);
+            refreshState();
+        }
+
+        async function deleteSchedule(id) {
+            await api('/api/schedule/' + id, 'DELETE');
+            log('Schedule deleted');
+            refreshState();
+        }
+
+        setInterval(refreshState, 3000);
+        refreshState();
+        log('Dashboard loaded');
+    </script>
+</body>
+</html>
