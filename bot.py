@@ -269,12 +269,12 @@ async def cmd_group_go(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             from telethon.tl.types import PhoneCallProtocol, PhoneCallWaiting, InputPhoneCall, PhoneCallDiscardReasonMissed
 
             protocol = PhoneCallProtocol(udp_p2p=True, udp_reflector=True, min_layer=92, max_layer=92, library_versions=["4.0.0"])
-            result = loop.run_until_complete(client(RequestCallRequest(user_id=target_user, random_id=random_id, g_a_hash=g_a_hash, protocol=protocol)))
+            result = loop.run_until_complete(state["telethon_client"](RequestCallRequest(user_id=target_user, random_id=random_id, g_a_hash=g_a_hash, protocol=protocol)))
             call = result.call
             if isinstance(call, PhoneCallWaiting):
                 time.sleep(12)
                 try:
-                    loop.run_until_complete(client(DiscardCallRequest(peer=InputPhoneCall(id=call.id, access_hash=call.access_hash), duration=0, reason=PhoneCallDiscardReasonMissed(), connection_id=0)))
+                    loop.run_until_complete(state["telethon_client"](DiscardCallRequest(peer=InputPhoneCall(id=call.id, access_hash=call.access_hash), duration=0, reason=PhoneCallDiscardReasonMissed(), connection_id=0)))
                 except:
                     pass
         except Exception as e:
