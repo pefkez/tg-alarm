@@ -357,7 +357,8 @@ async def api_alarm_loop(update):
     while state["running"] and not state["stop_event"].is_set():
         msgs = await client.get_messages(target_user, limit=1)
         if msgs and msgs[0].id > last_msg_id:
-            await update.message.reply_text(f"@{target} \u043d\u0430\u043f\u0438\u0441\u0430\u043b(\u0430)! \u0414\u043e\u0437\u0432\u043e\u043d \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043d")
+            if update:
+                await update.message.reply_text(f"@{target} \u043d\u0430\u043f\u0438\u0441\u0430\u043b(\u0430)! \u0414\u043e\u0437\u0432\u043e\u043d \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043d")
             break
 
         try:
@@ -388,7 +389,8 @@ async def api_alarm_loop(update):
 
         msgs = await client.get_messages(target_user, limit=1)
         if msgs and msgs[0].id > last_msg_id:
-            await update.message.reply_text(f"@{target} \u043d\u0430\u043f\u0438\u0441\u0430\u043b(\u0430)! \u0414\u043e\u0437\u0432\u043e\u043d \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043d")
+            if update:
+                await update.message.reply_text(f"@{target} \u043d\u0430\u043f\u0438\u0441\u0430\u043b(\u0430)! \u0414\u043e\u0437\u0432\u043e\u043d \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043d")
             break
 
         for _ in range(25):
