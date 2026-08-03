@@ -14,6 +14,7 @@ class AlarmScheduler:
         self._running = False
         self._thread = None
         self._on_alarm: Callable = None
+        self._fired = set()
 
     def set_callback(self, cb: Callable):
         self._on_alarm = cb
@@ -71,6 +72,10 @@ class AlarmScheduler:
                     alarm_time = datetime.strptime(alarm_time_str, "%H:%M").time()
                     if now.time().hour == alarm_time.hour and now.time().minute == alarm_time.minute:
                         if now.weekday() in days or not days:
+                            fired_key = f"{sched.get('id')} {now.strftime('%Y-%m-%d %H:%M')}"
+                            if fired_key in self._fired:
+                                continue
+                            self._fired.add(fired_key)
                             if self._on_alarm:
                                 threading.Thread(
                                     target=self._on_alarm,
