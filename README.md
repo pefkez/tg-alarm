@@ -36,5 +36,3 @@ pip install -r tg_alarm_macro_requirements.txt
 python tg_alarm_macro.py --calibrate
 python tg_alarm_macro.py
 ```
-
----
