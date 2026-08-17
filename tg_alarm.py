@@ -1,4 +1,5 @@
 import os, sys, asyncio, random, hashlib, struct, time
+from datetime import datetime, timedelta
 from pathlib import Path
 from telethon import TelegramClient, events
 from telethon.tl.functions.phone import RequestCallRequest, DiscardCallRequest
@@ -14,6 +15,7 @@ DH_GENERATOR = 2
 CALL_RING_SECS = 12
 RETRY_DELAY = 25
 MAX_CALLS = 50
+WAKE_HM = os.getenv("WAKE_HM", "07:00")
 
 API_ID = 123456789   # my.telegram.org → API Development tools
 API_HASH = 'abc123def456...'
@@ -88,26 +90,21 @@ async def on_message(event):
         print(f"\n✅ {name} wrote: {event.message.text or '(media)'}")
         is_running = False
 
-async def main():
-    global target_user, my_id, last_msg_id, is_running
+def seconds_until_wake() -> float:
+    now = datetime.now()
+    hh, mm = map(int, WAKE_HM.split(":"))
+    target = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
+    if (target - now).total_seconds() <= 0:
+        target += timedelta(days=1)
+    return (target - now).total_seconds()
 
-    await client.start(phone=PHONE)
-    me = await client.get_me()
-    my_id = me.id
-    print(f"✓ Logged in as {me.first_name} (id={my_id})")
 
-    try:
-        target_user = await client.get_entity(TARGET)
-    except Exception as e:
-        print(f"✗ Cannot find target '{TARGET}': {e}")
-        return
-
-    name = target_user.first_name or target_user.username or TARGET
-    print(f"✓ Target: {name} (id={target_user.id})")
-
+async def run_alarm_cycle(target_user, name):
+    global is_running, last_msg_id
+    is_running = True
     last_msg_id = await get_last_msg_id()
     print(f"✓ Last message id: {last_msg_id}")
-    print(f"▶ Starting alarm loop (calls every {CALL_RING_SECS + RETRY_DELAY}s)...\n")
+    print(f"▶ Alarm loop (calls every {CALL_RING_SECS + RETRY_DELAY}s)...\n")
 
     calls_made = 0
     while is_running:
@@ -139,6 +136,32 @@ async def main():
             print(f"\n✅ New message from {name} detected! Stopping.")
             break
 
-    print("\n🏁 Done.")
+    print("🏁 Done. Sleeping until next wake-up.\n")
+
+
+async def main():
+    global target_user, my_id
+
+    await client.start(phone=PHONE)
+    me = await client.get_me()
+    my_id = me.id
+    print(f"✓ Logged in as {me.first_name} (id={my_id})")
+
+    try:
+        target_user = await client.get_entity(TARGET)
+    except Exception as e:
+        print(f"✗ Cannot find target '{TARGET}': {e}")
+        return
+
+    name = target_user.first_name or target_user.username or TARGET
+    print(f"✓ Target: {name} (id={target_user.id})")
+    print(f"☀️ Daily alarm at {WAKE_HM}")
+
+    while True:
+        wait = seconds_until_wake()
+        print(f"⏰ Next alarm in {int(wait // 3600)}h {int(wait % 3600 // 60)}m\n")
+        await asyncio.sleep(wait)
+        print(f"☀️ {WAKE_HM} — waking up {name}...")
+        await run_alarm_cycle(target_user, name)
 
 asyncio.run(main())
